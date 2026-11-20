@@ -53,9 +53,10 @@ func fetchPic(client *http.Client, key, date string) (*apod, int, error) {
 
 func main() {
 	open := flag.Bool("open", false, "open the image in your browser")
+	dateFlag := flag.String("date", "", "fetch a specific date (YYYY-MM-DD)")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "nasa-apod - fetch NASA's Astronomy Picture of the Day link\n\nUsage:\n  nasa-apod [--open]\n\nFlags:\n")
+		fmt.Fprintf(os.Stderr, "nasa-apod - fetch NASA's Astronomy Picture of the Day link\n\nUsage:\n  nasa-apod [--open] [--date YYYY-MM-DD]\n\nFlags:\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -71,9 +72,18 @@ func main() {
 		key = "DEMO_KEY"
 	}
 
-	// 无 date 参数的接口间歇性 500，显式日期稳定；当天未发布时回退昨天一期
-	now := time.Now().UTC()
-	dates := []string{now.Format("2006-01-02"), now.AddDate(0, 0, -1).Format("2006-01-02")}
+	var dates []string
+	if *dateFlag != "" {
+		if _, err := time.Parse("2006-01-02", *dateFlag); err != nil {
+			fmt.Fprintln(os.Stderr, "invalid --date (want YYYY-MM-DD):", *dateFlag)
+			os.Exit(1)
+		}
+		dates = []string{*dateFlag}
+	} else {
+		// 无 date 参数的接口间歇性 500，显式日期稳定；当天未发布时回退昨天一期
+		now := time.Now().UTC()
+		dates = []string{now.Format("2006-01-02"), now.AddDate(0, 0, -1).Format("2006-01-02")}
+	}
 	var pic *apod
 	var lastErr error
 	var lastCode int

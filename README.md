@@ -15,8 +15,9 @@ Go 单文件实现，无第三方依赖，默认使用 NASA 官方 `DEMO_KEY`（
 ## 使用
 
 ```bash
-nasa-apod          # 输出当天图片的标题和链接
-nasa-apod --open   # 同时在浏览器中打开
+nasa-apod                    # 输出当天图片的标题和链接
+nasa-apod --date 2026-11-19  # 指定日期
+nasa-apod --open             # 同时在浏览器中打开
 nasa-apod --version
 ```
 
