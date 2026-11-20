@@ -36,8 +36,8 @@ Link:  https://apod.nasa.gov/apod/image/2611/butterfly_hubble_1920.jpg
 | Windows | amd64 | `.zip` |
 
 ```bash
-# macOS / Linux
-tar xzf nasa-apod_v0.1.0_darwin_arm64.tar.gz
+# macOS / Linux（Apple Silicon 示例，latest 直链始终指向最新 Release）
+curl -L https://github.com/pidgey016/nasa-apod-cli/releases/latest/download/nasa-apod_darwin_arm64.tar.gz | tar xz
 sudo mv nasa-apod /usr/local/bin/
 ```
 

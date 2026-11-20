@@ -39,7 +39,7 @@ jobs:
           mkdir -p dist
           go build -trimpath -ldflags "-s -w -X main.version=${{ github.ref_name }}" -o "dist/nasa-apod$ext" .
           cd dist
-          name="nasa-apod_${{ github.ref_name }}_${GOOS}_${GOARCH}"
+          name="nasa-apod_${GOOS}_${GOARCH}"
           if [ "$GOOS" = "windows" ]; then
             zip "$name.zip" "nasa-apod$ext"
           else
