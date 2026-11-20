@@ -4,13 +4,13 @@
 
 Go 单文件实现，无第三方依赖，默认使用 NASA 官方 `DEMO_KEY`（限流 30 次/小时/IP），无需注册。
 
-> 共享网络出口下 `DEMO_KEY` 配额可能很快耗尽（HTTP 429）。可到 [api.nasa.gov](https://api.nasa.gov) 免费申请自己的 key，然后：
+> 如需更高配额，可到 [api.nasa.gov](https://api.nasa.gov) 免费申请自己的 key，然后：
 >
 > ```bash
 > export NASA_API_KEY=你的key
 > ```
 
-**主页**：GitHub Pages（`docs/` 目录） · **下载**：[Releases](../../releases/latest)
+**主页**：<https://pidgey016.github.io/nasa-apod-cli/> · **下载**：[Releases](../../releases/latest)
 
 ## 使用
 
