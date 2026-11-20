@@ -2,13 +2,7 @@
 
 一条命令获取 NASA 每日天文图片（[APOD](https://apod.nasa.gov/)）的链接。
 
-Go 单文件实现，无第三方依赖，默认使用 NASA 官方 `DEMO_KEY`（限流 30 次/小时/IP），无需注册。
-
-> 如需更高配额，可到 [api.nasa.gov](https://api.nasa.gov) 免费申请自己的 key，然后：
->
-> ```bash
-> export NASA_API_KEY=你的key
-> ```
+Go 单文件实现，无第三方依赖。数据源为官方 [science.nasa.gov APOD 接口](https://science.nasa.gov/apod)（APOD 于 2026-11 从 apod.nasa.gov 迁移而来），无需 API key。
 
 **主页**：<https://pidgey016.github.io/nasa-apod-cli/> · **下载**：[Releases](../../releases/latest)
 
@@ -21,7 +15,7 @@ nasa-apod --open             # 同时在浏览器中打开
 nasa-apod --version
 ```
 
-请求带显式日期（比无日期接口稳定，后者间歇性 HTTP 500）；遇 500 自动重试一次，当天图片尚未发布时回退到昨天一期（输出中会显示实际日期）。
+当天图片尚未发布时接口返回 404 并报错退出，可用 `--date` 指定已发布的日期。
 
 输出示例：
 

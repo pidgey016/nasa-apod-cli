@@ -14,16 +14,21 @@ import (
 var version = "dev"
 
 type apod struct {
-	Date        string `json:"date"`
-	Title       string `json:"title"`
-	MediaType   string `json:"media_type"`
-	URL         string `json:"url"`
-	HDURL       string `json:"hdurl"`
-	Explanation string `json:"explanation"`
+	Date      string `json:"date"`
+	Title     string `json:"title"`
+	MediaType string `json:"media_type"`
+	URL       string `json:"url"`
+	HDURL     string `json:"hdurl"`
 }
 
-func fetchPic(client *http.Client, key, date string) (*apod, int, error) {
-	req, _ := http.NewRequest(http.MethodGet, "https://api.nasa.gov/planetary/apod?api_key="+key+"&date="+date, nil)
+func fetchPic(client *http.Client, date string) (*apod, int, error) {
+	d, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return nil, 0, err
+	}
+	// APOD 已于 2026-11 从 apod.nasa.gov 迁移到 science.nasa.gov，旧 api.nasa.gov 接口只返回占位内容
+	url := "https://science.nasa.gov/wp-json/wp/v2/apod-basic/" + d.Format("060102") + "?_fields=date,title,media_type,url,hdurl"
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set("User-Agent", "nasa-apod-cli/"+version)
 	resp, err := client.Do(req)
 	if err != nil {
@@ -32,17 +37,10 @@ func fetchPic(client *http.Client, key, date string) (*apod, int, error) {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		var e struct {
-			Error struct {
-				Message string `json:"message"`
-			} `json:"error"`
-			Msg string `json:"msg"`
+			Message string `json:"message"`
 		}
 		json.NewDecoder(resp.Body).Decode(&e)
-		msg := e.Error.Message
-		if msg == "" {
-			msg = e.Msg
-		}
-		return nil, resp.StatusCode, fmt.Errorf("NASA API error (HTTP %d): %s", resp.StatusCode, msg)
+		return nil, resp.StatusCode, fmt.Errorf("NASA API error (HTTP %d): %s", resp.StatusCode, e.Message)
 	}
 	var pic apod
 	if err := json.NewDecoder(resp.Body).Decode(&pic); err != nil {
@@ -67,48 +65,18 @@ func main() {
 	}
 
 	client := &http.Client{Timeout: 20 * time.Second}
-	key := os.Getenv("NASA_API_KEY")
-	if key == "" {
-		key = "DEMO_KEY"
-	}
 
-	var dates []string
+	date := time.Now().UTC().Format("2006-01-02")
 	if *dateFlag != "" {
 		if _, err := time.Parse("2006-01-02", *dateFlag); err != nil {
 			fmt.Fprintln(os.Stderr, "invalid --date (want YYYY-MM-DD):", *dateFlag)
 			os.Exit(1)
 		}
-		dates = []string{*dateFlag}
-	} else {
-		// 无 date 参数的接口间歇性 500，显式日期稳定；当天未发布时回退昨天一期
-		now := time.Now().UTC()
-		dates = []string{now.Format("2006-01-02"), now.AddDate(0, 0, -1).Format("2006-01-02")}
+		date = *dateFlag
 	}
-	var pic *apod
-	var lastErr error
-	var lastCode int
-	for _, d := range dates {
-		for attempt := 0; attempt < 2; attempt++ {
-			p, code, err := fetchPic(client, key, d)
-			if err == nil {
-				pic = p
-				break
-			}
-			lastErr, lastCode = err, code
-			if code != http.StatusInternalServerError {
-				break
-			}
-			time.Sleep(time.Second)
-		}
-		if pic != nil || lastCode == http.StatusTooManyRequests {
-			break
-		}
-	}
-	if pic == nil {
-		fmt.Fprintln(os.Stderr, lastErr)
-		if lastCode == http.StatusTooManyRequests {
-			fmt.Fprintln(os.Stderr, "DEMO_KEY 限流（30 次/小时/IP）。稍后重试，或到 https://api.nasa.gov 免费申请 key 后设置环境变量 NASA_API_KEY。")
-		}
+	pic, _, err := fetchPic(client, date)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 

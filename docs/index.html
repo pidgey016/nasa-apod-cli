@@ -81,7 +81,7 @@ $ nasa-apod --version</pre>
   <p style="color:#9aa7b5;font-size:.9rem;margin-top:10px">推送 <code>v*</code> tag 后由 GitHub Actions 自动交叉编译并发布到 Releases。</p>
 
   <h2>说明</h2>
-  <p style="color:#9aa7b5;font-size:.92rem">数据来自 <a href="https://api.nasa.gov/" style="color:#7ec8ff">NASA Open API</a> 的 APOD 接口，默认使用官方 <code>DEMO_KEY</code>（限流 30 次/小时/IP），无需注册。配额不够时可免费申请自己的 key，设置环境变量 <code>NASA_API_KEY</code> 即可。图片版权归 NASA 及作者所有。</p>
+  <p style="color:#9aa7b5;font-size:.92rem">数据来自官方 <a href="https://science.nasa.gov/apod" style="color:#7ec8ff">science.nasa.gov APOD 接口</a>（APOD 于 2026-11 从 apod.nasa.gov 迁移而来），无需 API key、无限流。当天图片尚未发布时返回 404，可用 <code>--date</code> 指定日期。图片版权归 NASA 及作者所有。</p>
 
   <footer>nasa-apod-cli · MIT License · <a data-link="">Source on GitHub</a></footer>
 </div>
