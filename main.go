@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
+	_ "time/tzdata"
 )
 
 var version = "dev"
@@ -66,7 +67,9 @@ func main() {
 
 	client := &http.Client{Timeout: 20 * time.Second}
 
-	date := time.Now().UTC().Format("2006-01-02")
+	// APOD 按美东时间发布，"当天"以该时区为准
+	et, _ := time.LoadLocation("America/New_York")
+	date := time.Now().In(et).Format("2006-01-02")
 	if *dateFlag != "" {
 		if _, err := time.Parse("2006-01-02", *dateFlag); err != nil {
 			fmt.Fprintln(os.Stderr, "invalid --date (want YYYY-MM-DD):", *dateFlag)
