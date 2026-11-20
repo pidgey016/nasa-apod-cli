@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nasa-apod CLI — 每天一张 NASA 天文图片</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Segoe UI", sans-serif;
+    background: radial-gradient(ellipse at top, #1b2735 0%, #090a0f 100%);
+    color: #e6e6e6; min-height: 100vh; line-height: 1.7;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 64px 24px; }
+  h1 { font-size: 2.2rem; letter-spacing: .5px; }
+  h1 span { color: #7ec8ff; }
+  .tagline { color: #9aa7b5; margin: 12px 0 32px; font-size: 1.05rem; }
+  .btns { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 48px; }
+  a.btn {
+    display: inline-block; padding: 10px 22px; border-radius: 8px;
+    text-decoration: none; font-weight: 600; font-size: .95rem;
+  }
+  .primary { background: #2f81f7; color: #fff; }
+  .primary:hover { background: #4a93f8; }
+  .ghost { border: 1px solid #3d4a5a; color: #c9d6e3; }
+  .ghost:hover { border-color: #7ec8ff; color: #7ec8ff; }
+  h2 { font-size: 1.15rem; margin: 36px 0 12px; color: #7ec8ff; }
+  pre {
+    background: #10151c; border: 1px solid #232c38; border-radius: 10px;
+    padding: 16px 18px; overflow-x: auto; font-size: .88rem;
+    font-family: "SF Mono", Menlo, Consolas, monospace; color: #d7e3ee;
+  }
+  pre .c { color: #6b7a8c; }
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  td, th { padding: 8px 10px; border-bottom: 1px solid #232c38; text-align: left; }
+  th { color: #9aa7b5; font-weight: 500; }
+  code { font-family: "SF Mono", Menlo, Consolas, monospace; background: #10151c; padding: 2px 6px; border-radius: 5px; font-size: .88em; }
+  footer { margin-top: 56px; color: #6b7a8c; font-size: .85rem; }
+  footer a { color: #7ec8ff; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔭 nasa-apod <span>CLI</span></h1>
+  <p class="tagline">一条命令，获取 NASA 每日天文图片（APOD）的链接。单文件二进制，下载即用，支持 macOS / Linux / Windows。</p>
+
+  <div class="btns">
+    <a class="btn primary" data-link="releases/latest">下载最新版</a>
+    <a class="btn ghost" data-link="">GitHub 仓库</a>
+  </div>
+
+  <h2>安装</h2>
+  <pre><span class="c"># macOS (Apple Silicon) 示例，版本号以 Releases 页为准</span>
+curl -L <span data-text="releases/download/v0.1.0/nasa-apod_v0.1.0_darwin_arm64.tar.gz">…</span> | tar xz
+sudo mv nasa-apod /usr/local/bin/</pre>
+  <p style="color:#9aa7b5;font-size:.9rem">其他平台请在 <a data-link="releases/latest" style="color:#7ec8ff">Releases</a> 页选择对应压缩包（darwin / linux / windows × amd64 / arm64）。</p>
+
+  <h2>使用</h2>
+  <pre>$ nasa-apod
+NASA Astronomy Picture of the Day (2026-11-20)
+Title: The Butterfly Nebula from Hubble
+Link:  https://apod.nasa.gov/apod/image/2611/butterfly_hubble_1920.jpg
+
+<span class="c"># 直接在浏览器中打开图片</span>
+$ nasa-apod --open
+
+<span class="c"># 查看版本</span>
+$ nasa-apod --version</pre>
+
+  <h2>发布方式</h2>
+  <table>
+    <tr><th>平台</th><th>架构</th><th>产物</th></tr>
+    <tr><td>macOS</td><td>arm64 / amd64</td><td>.tar.gz</td></tr>
+    <tr><td>Linux</td><td>amd64 / arm64</td><td>.tar.gz</td></tr>
+    <tr><td>Windows</td><td>amd64</td><td>.zip</td></tr>
+  </table>
+  <p style="color:#9aa7b5;font-size:.9rem;margin-top:10px">推送 <code>v*</code> tag 后由 GitHub Actions 自动交叉编译并发布到 Releases。</p>
+
+  <h2>说明</h2>
+  <p style="color:#9aa7b5;font-size:.92rem">数据来自 <a href="https://api.nasa.gov/" style="color:#7ec8ff">NASA Open API</a> 的 APOD 接口，默认使用官方 <code>DEMO_KEY</code>（限流 30 次/小时/IP），无需注册。配额不够时可免费申请自己的 key，设置环境变量 <code>NASA_API_KEY</code> 即可。图片版权归 NASA 及作者所有。</p>
+
+  <footer>nasa-apod-cli · MIT License · <a data-link="">Source on GitHub</a></footer>
+</div>
+<script>
+  // 从 Pages 地址推断 owner/repo，填充链接
+  const host = location.hostname;
+  let base = "";
+  if (host.endsWith("github.io")) {
+    const owner = host.split(".")[0];
+    const repo = location.pathname.split("/").filter(Boolean)[0] || "";
+    base = "https://github.com/" + owner + "/" + repo;
+  }
+  document.querySelectorAll("[data-link]").forEach(a => {
+    a.href = base ? base + "/" + a.dataset.link : "#";
+  });
+  document.querySelectorAll("[data-text]").forEach(el => {
+    el.textContent = base ? base + "/" + el.dataset.text : el.dataset.text;
+  });
+</script>
+</body>
+</html>
