@@ -65,6 +65,9 @@ Link:  https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod
 <span class="c"># 指定日期</span>
 $ nasa-apod --date 2026-11-19
 
+<span class="c"># 输出原始 JSON（date/title/explanation/media_type/url/hdurl/alt/permalink）</span>
+$ nasa-apod --json | jq
+
 <span class="c"># 直接在浏览器中打开图片</span>
 $ nasa-apod --open
 

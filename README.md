@@ -12,6 +12,7 @@ Go 单文件实现，无第三方依赖。数据源为官方 [science.nasa.gov A
 nasa-apod                    # 输出当天图片的标题和链接
 nasa-apod --date 2026-11-19  # 指定日期
 nasa-apod --open             # 同时在浏览器中打开
+nasa-apod --json             # 输出原始 JSON 字段，可接 jq
 nasa-apod --version
 ```
 

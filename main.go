@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -15,11 +16,14 @@ import (
 var version = "dev"
 
 type apod struct {
-	Date      string `json:"date"`
-	Title     string `json:"title"`
-	MediaType string `json:"media_type"`
-	URL       string `json:"url"`
-	HDURL     string `json:"hdurl"`
+	Date        string `json:"date"`
+	Title       string `json:"title"`
+	Explanation string `json:"explanation"`
+	MediaType   string `json:"media_type"`
+	URL         string `json:"url"`
+	HDURL       string `json:"hdurl"`
+	Alt         string `json:"alt"`
+	Permalink   string `json:"permalink"`
 }
 
 func fetchPic(client *http.Client, date string) (*apod, int, error) {
@@ -28,7 +32,7 @@ func fetchPic(client *http.Client, date string) (*apod, int, error) {
 		return nil, 0, err
 	}
 	// APOD 已于 2026-11 从 apod.nasa.gov 迁移到 science.nasa.gov，旧 api.nasa.gov 接口只返回占位内容
-	url := "https://science.nasa.gov/wp-json/wp/v2/apod-basic/" + d.Format("060102") + "?_fields=date,title,media_type,url,hdurl"
+	url := "https://science.nasa.gov/wp-json/wp/v2/apod-basic/" + d.Format("060102") + "?_fields=date,title,explanation,media_type,url,hdurl,alt,permalink"
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set("User-Agent", "nasa-apod-cli/"+version)
 	resp, err := client.Do(req)
@@ -53,9 +57,10 @@ func fetchPic(client *http.Client, date string) (*apod, int, error) {
 func main() {
 	open := flag.Bool("open", false, "open the image in your browser")
 	dateFlag := flag.String("date", "", "fetch a specific date (YYYY-MM-DD)")
+	jsonOut := flag.Bool("json", false, "output raw JSON (date, title, explanation, media_type, url, hdurl, alt, permalink)")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "nasa-apod - fetch NASA's Astronomy Picture of the Day link\n\nUsage:\n  nasa-apod [--open] [--date YYYY-MM-DD]\n\nFlags:\n")
+		fmt.Fprintf(os.Stderr, "nasa-apod - fetch NASA's Astronomy Picture of the Day link\n\nUsage:\n  nasa-apod [--open] [--date YYYY-MM-DD] [--json]\n\nFlags:\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -88,9 +93,20 @@ func main() {
 		link = pic.HDURL
 	}
 
-	fmt.Printf("NASA Astronomy Picture of the Day (%s)\n", pic.Date)
-	fmt.Printf("Title: %s\n", pic.Title)
-	fmt.Printf("Link:  %s\n", link)
+	if *jsonOut {
+		var buf bytes.Buffer
+		enc := json.NewEncoder(&buf)
+		enc.SetEscapeHTML(false)
+		if err := enc.Encode(pic); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		fmt.Print(buf.String())
+	} else {
+		fmt.Printf("NASA Astronomy Picture of the Day (%s)\n", pic.Date)
+		fmt.Printf("Title: %s\n", pic.Title)
+		fmt.Printf("Link:  %s\n", link)
+	}
 
 	if *open {
 		var cmd *exec.Cmd
