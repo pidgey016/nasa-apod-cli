@@ -22,6 +22,35 @@ type apod struct {
 	Explanation string `json:"explanation"`
 }
 
+func fetchPic(client *http.Client, key, date string) (*apod, int, error) {
+	req, _ := http.NewRequest(http.MethodGet, "https://api.nasa.gov/planetary/apod?api_key="+key+"&date="+date, nil)
+	req.Header.Set("User-Agent", "nasa-apod-cli/"+version)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		var e struct {
+			Error struct {
+				Message string `json:"message"`
+			} `json:"error"`
+			Msg string `json:"msg"`
+		}
+		json.NewDecoder(resp.Body).Decode(&e)
+		msg := e.Error.Message
+		if msg == "" {
+			msg = e.Msg
+		}
+		return nil, resp.StatusCode, fmt.Errorf("NASA API error (HTTP %d): %s", resp.StatusCode, msg)
+	}
+	var pic apod
+	if err := json.NewDecoder(resp.Body).Decode(&pic); err != nil {
+		return nil, resp.StatusCode, fmt.Errorf("bad response: %w", err)
+	}
+	return &pic, resp.StatusCode, nil
+}
+
 func main() {
 	open := flag.Bool("open", false, "open the image in your browser")
 	showVersion := flag.Bool("version", false, "print version and exit")
@@ -41,37 +70,35 @@ func main() {
 	if key == "" {
 		key = "DEMO_KEY"
 	}
-	req, _ := http.NewRequest(http.MethodGet, "https://api.nasa.gov/planetary/apod?api_key="+key, nil)
-	req.Header.Set("User-Agent", "nasa-apod-cli/"+version)
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "request failed:", err)
-		os.Exit(1)
-	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		var e struct {
-			Error struct {
-				Message string `json:"message"`
-			} `json:"error"`
-			Msg string `json:"msg"`
+	// 无 date 参数的接口间歇性 500，显式日期稳定；当天未发布时回退昨天一期
+	now := time.Now().UTC()
+	dates := []string{now.Format("2006-01-02"), now.AddDate(0, 0, -1).Format("2006-01-02")}
+	var pic *apod
+	var lastErr error
+	var lastCode int
+	for _, d := range dates {
+		for attempt := 0; attempt < 2; attempt++ {
+			p, code, err := fetchPic(client, key, d)
+			if err == nil {
+				pic = p
+				break
+			}
+			lastErr, lastCode = err, code
+			if code != http.StatusInternalServerError {
+				break
+			}
+			time.Sleep(time.Second)
 		}
-		json.NewDecoder(resp.Body).Decode(&e)
-		msg := e.Error.Message
-		if msg == "" {
-			msg = e.Msg
+		if pic != nil || lastCode == http.StatusTooManyRequests {
+			break
 		}
-		fmt.Fprintf(os.Stderr, "NASA API error (HTTP %d): %s\n", resp.StatusCode, msg)
-		if resp.StatusCode == http.StatusTooManyRequests {
+	}
+	if pic == nil {
+		fmt.Fprintln(os.Stderr, lastErr)
+		if lastCode == http.StatusTooManyRequests {
 			fmt.Fprintln(os.Stderr, "DEMO_KEY 限流（30 次/小时/IP）。稍后重试，或到 https://api.nasa.gov 免费申请 key 后设置环境变量 NASA_API_KEY。")
 		}
-		os.Exit(1)
-	}
-
-	var pic apod
-	if err := json.NewDecoder(resp.Body).Decode(&pic); err != nil {
-		fmt.Fprintln(os.Stderr, "bad response:", err)
 		os.Exit(1)
 	}
 
